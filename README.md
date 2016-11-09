@@ -1,1 +1,9 @@
 # PixivCollectorNode
+Collect your favorite artist's work from pixiv.
+
+## how to use
+node index.js [your_pixiv_id] [your_password] [target_artist_memberId]
+
+## dependencies
+selenium-webdriver
+sleep-async
