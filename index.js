@@ -3,7 +3,7 @@ var webdriver = require("selenium-webdriver"),
     By = webdriver.By,
     until = webdriver.until;
 var driver = new webdriver.Builder().forBrowser("firefox").build();
-driver.manage().timeouts().setScriptTimeout(10000);
+driver.manage().timeouts().setScriptTimeout(20000);
 
 // dependencies
 var fs = require('fs');
@@ -28,9 +28,14 @@ loginPage.callAfeterLogin(function() {
 });
 
 var i = 1;
+var page = 1;
 
 function getIllusts() {
-    var memberIllustPage = new MemberIllustPage(driver, targetUser, 1);
+    if (i == 21) {
+        i = 1;
+        page++;
+    }
+    var memberIllustPage = new MemberIllustPage(driver, targetUser, page);
     memberIllustPage
         .clickThumbnail(i++)
         .clickLayoutThumbnail()
@@ -38,20 +43,27 @@ function getIllusts() {
             var host = src.match(/^http.*pixiv.net\//);
             driver.get(host[0]).then(function() {
                 driver.executeAsyncScript(
-                    get_image, src
+                    getImage, src
                 ).then(function(response) {
+                    // make download directory
                     var fileName = src.match(/\d+_p0.*$/);
                     var dir = './download';
                     if (!fs.existsSync(dir)) {
                         fs.mkdirSync(dir);
                     }
+                    // save picture
                     fs.writeFile(dir + "/" + fileName[0], Buffer.from(response, 'base64'));
+                    // recursively
+                    getIllusts();
                 });
             });
         });
 }
 
-function get_image(url) {
+/**
+ * get image from browser
+ */
+function getImage(url) {
     var callback = arguments[arguments.length - 1];
     var xhreq = new XMLHttpRequest();
     xhreq.open("GET", url, true);
@@ -60,8 +72,7 @@ function get_image(url) {
     xhreq.onload = function(e) {
         console.log("success");
         setTimeout(function() {
-            var s = arrayBufferToBase64(xhreq.response);
-            callback(s);
+            callback(arrayBufferToBase64(xhreq.response));
         }, 3000);
     };
     xhreq.onreadystatechange = function() {
@@ -73,6 +84,9 @@ function get_image(url) {
     }
     xhreq.send();
 
+    /**
+     * to base64 for node.js
+     */
     function arrayBufferToBase64(buffer) {
         var binary = '';
         var bytes = new Uint8Array(buffer);
@@ -82,14 +96,4 @@ function get_image(url) {
         }
         return window.btoa(binary);
     }
-}
-
-function base64ToArrayBuffer(base64) {
-    var binary_string = atob(base64);
-    var len = binary_string.length;
-    var bytes = new Uint8Array(len);
-    for (var i = 0; i < len; i++) {
-        bytes[i] = binary_string.charCodeAt(i);
-    }
-    return bytes.buffer;
 }
