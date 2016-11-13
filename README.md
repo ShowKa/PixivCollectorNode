@@ -5,5 +5,6 @@ Collect your favorite artist's work from pixiv.
 node index.js [your_pixiv_id] [your_password] [target_artist_memberId]
 
 ## dependencies
-selenium-webdriver
-sleep-async
+0. selenium-webdriver
+0. sleep-async
+0. request
